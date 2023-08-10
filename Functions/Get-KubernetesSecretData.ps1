@@ -24,7 +24,6 @@ function Get-KubernetesSecretData {
         Get-KubernetesNamespaceMetadata | Get-KubernetesSecretDat
 
         Gets Kubernetes secret data all secrets across all authorized namespaces.
-
     .EXAMPLE
         gksd -n "apps"
 
