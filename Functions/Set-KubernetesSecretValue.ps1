@@ -45,10 +45,10 @@ function Set-KubernetesSecretValue {
 #>
     [CmdletBinding()]
     [Alias('sksv')]
-    [OutputType([void])]
+    [OutputType([PSCustomObject])]
     Param
     (
-        [Parameter(Mandatory = $false)][Alias('ns')][String]$Namespace = 'default',
+        [Parameter(Mandatory = $false)][Alias('ns', 'n')][String]$Namespace = 'default',
 
         [Parameter(Mandatory = $true)][Alias('s')][String]$SecretName,
 
