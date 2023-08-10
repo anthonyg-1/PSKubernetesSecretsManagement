@@ -20,13 +20,36 @@ function Get-KubernetesSecretData {
         Get-KubernetesSecretData -Namespace "apps" -SecretName "my-secret"
 
         Gets Kubernetes secret data for the secret 'my-secret' in the 'apps' namespace.
+    .EXAMPLE
+        Get-KubernetesNamespaceMetadata | Get-KubernetesSecretDat
+
+        Gets Kubernetes secret data all secrets across all authorized namespaces.
+
+    .EXAMPLE
+        gksd -n "apps"
+
+        Gets Kubernetes secret data for all secrets in the 'apps' namespace.
+    .EXAMPLE
+        gksd -s "my-secret"
+
+        Gets Kubernetes secret data for the secret 'my-secret' in the default namespace.
+    .EXAMPLE
+        gksd -n "apps" -s "my-secret"
+
+        Gets Kubernetes secret data for the secret 'my-secret' in the 'apps' namespace.
+    .EXAMPLE
+        gknm | gksd
+
+        Gets Kubernetes secret data all secrets across all authorized namespaces.
+    .LINK
+        Get-KubernetesNamespaceMetadata
     #>
     [CmdletBinding()]
     [Alias('gksd')]
     [OutputType([PSCustomObject])]
     Param
     (
-        [Parameter(Mandatory = $false)][Alias('ns')][String]$Namespace = 'default',
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)][Alias('ns', 'n')][String]$Namespace = 'default',
         [Parameter(Mandatory = $false)][Alias('s')][String]$SecretName
     )
     BEGIN {
