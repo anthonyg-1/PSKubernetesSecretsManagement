@@ -68,9 +68,11 @@ function Get-KubernetesSecretData {
     PROCESS {
         $targetSecretNames = @()
 
+        $targetNamespace = $Namespace
+
         if ($PSBoundParameters.ContainsKey("SecretName")) {
-            if (-not(Test-KubernetesSecretAccess -Namespace $Namespace -SecretName $SecretName)) {
-                $secretArgExceptionMessage = "The following secret was either not found or inaccessible. Check secret name, access rights for the specific secret and/or namespace, and try again: {0}:{1}" -f $Namespace, $SecretName
+            if (-not(Test-KubernetesSecretAccess -Namespace $targetNamespace -SecretName $SecretName)) {
+                $secretArgExceptionMessage = "The following secret was either not found or inaccessible. Check secret name, access rights for the specific secret and/or namespace, and try again: {0}:{1}" -f $targetNamespace, $SecretName
                 $SecretArgumentException = [ArgumentException]::new($secretArgExceptionMessage)
                 Write-Error -Exception $SecretArgumentException -ErrorAction Stop
             }
@@ -79,19 +81,19 @@ function Get-KubernetesSecretData {
         }
         else {
             try {
-                [PSCustomObject]$secretGetAllResults = $(kubectl get secrets --namespace=$Namespace --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
+                [PSCustomObject]$secretGetAllResults = $(kubectl get secrets --namespace=$targetNamespace --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
                 $targetSecretNames += ($secretGetAllResults.items.metadata | Select-Object -ExpandProperty name)
             }
             catch {
-                $ArgumentException = [ArgumentException]::new("Unable to get secrets in the $Namespace namespace.")
+                $ArgumentException = [ArgumentException]::new("Unable to get secrets in the $targetNamespace namespace.")
                 Write-Error -Exception $ArgumentException -ErrorAction Stop
             }
         }
 
         foreach ($targetSecretName in $targetSecretNames) {
             try {
-                [PSCustomObject]$secretGetResult = $(kubectl get secrets --namespace=$Namespace $targetSecretName --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
-                [PSCustomObject]$managedFieldValues = $((kubectl get secrets --namespace=$Namespace $targetSecretName --show-managed-fields --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop).metadata.managedFields
+                [PSCustomObject]$secretGetResult = $(kubectl get secrets --namespace=$targetNamespace $targetSecretName --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
+                [PSCustomObject]$managedFieldValues = $((kubectl get secrets --namespace=$targetNamespace $targetSecretName --show-managed-fields --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop).metadata.managedFields
 
                 $dataKeys = $null
                 if ($null -ne $secretGetResult.data) {
@@ -111,7 +113,7 @@ function Get-KubernetesSecretData {
                 Write-Output -InputObject $deserializedGetOutput
             }
             catch {
-                $argExceptionMessage = "The following secret was not found {0}:{1}" -f $Namespace, $SecretName
+                $argExceptionMessage = "The following secret was not found {0}:{1}" -f $targetNamespace, $SecretName
                 $ArgumentException = [ArgumentException]::new($argExceptionMessage)
                 Write-Error -Exception $ArgumentException -ErrorAction Stop
             }
