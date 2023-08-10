@@ -90,6 +90,9 @@ function Get-KubernetesSecretData {
             }
         }
 
+        ## All secrets across all namespaces:
+        #  $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -ErrorAction Stop).items.metadata
+
         foreach ($targetSecretName in $targetSecretNames) {
             try {
                 [PSCustomObject]$secretGetResult = $(kubectl get secrets --namespace=$targetNamespace $targetSecretName --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
