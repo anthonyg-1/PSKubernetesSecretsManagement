@@ -96,7 +96,7 @@ function Get-KubernetesSecretData {
         foreach ($targetSecretName in $targetSecretNames) {
             try {
                 [PSCustomObject]$secretGetResult = $(kubectl get secrets --namespace=$targetNamespace $targetSecretName --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
-                [PSCustomObject]$managedFieldValues = $((kubectl get secrets --namespace=$targetNamespace $targetSecretName --show-managed-fields --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop).metadata.managedFields
+                [PSCustomObject]$managedFieldValues = ($(kubectl get secrets --namespace=$targetNamespace $targetSecretName --show-managed-fields --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop).metadata.managedFields
 
                 $dataKeys = $null
                 if ($null -ne $secretGetResult.data) {
