@@ -64,6 +64,35 @@ function Get-KubernetesSecretData {
             Write-Error -Exception $ArgumentException -ErrorAction Stop
         }
 
+        function _getK8sSecretMetadata([string]$targetNamespace, [string]$targetSecretName) {
+            try {
+                [PSCustomObject]$secretGetResult = $(kubectl get secrets --namespace=$targetNamespace $targetSecretName --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
+                [PSCustomObject]$managedFieldValues = ($(kubectl get secrets --namespace=$targetNamespace $targetSecretName --show-managed-fields --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop).metadata.managedFields
+
+                $dataKeys = $null
+                if ($null -ne $secretGetResult.data) {
+                    $dataKeys = $secretGetResult.data | Get-Member | Where-Object -Property MemberType -eq NoteProperty | Select-Object -ExpandProperty Name
+                }
+
+                $deserializedGetOutput = [PSCustomObject]@{
+                    Name      = $secretGetResult.metadata.name
+                    Namespace = $secretGetResult.metadata.namespace
+                    Type      = $secretGetResult.type
+                    DataCount = $dataKeys.Count
+                    DataKeys  = $dataKeys
+                    CreatedOn = $managedFieldValues | Where-Object -Property manager -eq "kubectl-create" | Select-Object -ExpandProperty time
+                    UpdatedOn = $managedFieldValues | Where-Object -Property manager -eq "kubectl-patch" | Select-Object -ExpandProperty time
+                }
+
+                return $deserializedGetOutput
+            }
+            catch {
+                $argExceptionMessage = "The following secret was not found {0}:{1}" -f $targetNamespace, $targetSecretName
+                $ArgumentException = [ArgumentException]::new($argExceptionMessage)
+                Write-Error -Exception $ArgumentException -ErrorAction Stop
+            }
+        }
+
     }
     PROCESS {
         $targetSecretNames = @()
@@ -95,30 +124,10 @@ function Get-KubernetesSecretData {
 
         foreach ($targetSecretName in $targetSecretNames) {
             try {
-                [PSCustomObject]$secretGetResult = $(kubectl get secrets --namespace=$targetNamespace $targetSecretName --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
-                [PSCustomObject]$managedFieldValues = ($(kubectl get secrets --namespace=$targetNamespace $targetSecretName --show-managed-fields --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop).metadata.managedFields
-
-                $dataKeys = $null
-                if ($null -ne $secretGetResult.data) {
-                    $dataKeys = $secretGetResult.data | Get-Member | Where-Object -Property MemberType -eq NoteProperty | Select-Object -ExpandProperty Name
-                }
-
-                $deserializedGetOutput = [PSCustomObject]@{
-                    Name      = $secretGetResult.metadata.name
-                    Namespace = $secretGetResult.metadata.namespace
-                    Type      = $secretGetResult.type
-                    DataCount = $dataKeys.Count
-                    DataKeys  = $dataKeys
-                    CreatedOn = $managedFieldValues | Where-Object -Property manager -eq "kubectl-create" | Select-Object -ExpandProperty time
-                    UpdatedOn = $managedFieldValues | Where-Object -Property manager -eq "kubectl-patch" | Select-Object -ExpandProperty time
-                }
-
-                Write-Output -InputObject $deserializedGetOutput
+                _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $targetSecretName
             }
             catch {
-                $argExceptionMessage = "The following secret was not found {0}:{1}" -f $targetNamespace, $SecretName
-                $ArgumentException = [ArgumentException]::new($argExceptionMessage)
-                Write-Error -Exception $ArgumentException -ErrorAction Stop
+                Write-Error -Exception $_-ErrorAction Stop
             }
         }
     }
