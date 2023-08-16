@@ -42,8 +42,6 @@ function Get-KubernetesSecretMetadata {
         gksm -a
 
         Gets Kubernetes secret metadata all secrets across all authorized namespaces.
-    .LINK
-        Get-KubernetesNamespaceMetadata
     #>
     [CmdletBinding()]
     [Alias('gksm', 'gksd')]
