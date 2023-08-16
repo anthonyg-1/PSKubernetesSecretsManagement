@@ -116,13 +116,13 @@ function Get-KubernetesSecretData {
         }
 
         if ($PSBoundParameters.ContainsKey("All")) {
-            $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -ErrorAction Stop).items.metadata | ForEach-Object {
-                try {
+            try {
+                $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -ErrorAction Stop).items.metadata | ForEach-Object {
                     _getK8sSecretMetadata -targetNamespace $_.namespace -targetSecretName $_.name
                 }
-                catch {
-                    Write-Error -Exception $_-ErrorAction Stop
-                }
+            }
+            catch {
+                Write-Error -Exception $_-ErrorAction Stop
             }
         }
         else {

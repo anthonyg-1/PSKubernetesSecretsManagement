@@ -10,6 +10,8 @@ function Set-KubernetesSecretValue {
         The name of the Kubernetes secret.
     .PARAMETER SecretData
         The data for the Kubernetes secret as a PSCredential where the UserName will be the key and the Password will be the secret value.
+    .PARAMETER IgnoreKeyExistenceCheck
+        Tells the function to ignore the existence check for the key passed to the SecretData parameter.
     .EXAMPLE
         $secretDataName = "myapikey"
         $secretValue = '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'
@@ -54,7 +56,9 @@ function Set-KubernetesSecretValue {
 
         [Parameter(Mandatory = $true)][ValidateNotNull()][Alias('d')]
         [System.Management.Automation.PSCredential]
-        [System.Management.Automation.Credential()]$SecretData
+        [System.Management.Automation.Credential()]$SecretData,
+
+        [Parameter(Mandatory = $false)][Alias('i')][Switch]$IgnoreKeyExistenceCheck
     )
     BEGIN {
         if (-not(Test-KubernetesNamespaceAccess -Namespace $Namespace)) {
@@ -90,10 +94,12 @@ function Set-KubernetesSecretValue {
             Write-Error -Exception $ParseException -ErrorAction Stop
         }
 
-        if (-not($secretKeyName -in $existingSecretDataKeys)) {
-            $argExceptionMessage = "The key '{0}' does not exist in the following secret: {1}:{2}" -f $secretKeyName, $Namespace, $SecretName
-            $ArgumentException = [ArgumentException]::new($argExceptionMessage)
-            Write-Error -Exception $ArgumentException -ErrorAction Stop
+        if (-not($PSBoundParameters.ContainsKey("IgnoreKeyExistenceCheck"))) {
+            if (-not($secretKeyName -in $existingSecretDataKeys)) {
+                $argExceptionMessage = "The key '{0}' does not exist in the following secret: {1}:{2}" -f $secretKeyName, $Namespace, $SecretName
+                $ArgumentException = [ArgumentException]::new($argExceptionMessage)
+                Write-Error -Exception $ArgumentException -ErrorAction Stop
+            }
         }
 
         # Base64 encode the retrieved/generated secret, serialize hashtable to JSON and patch:
