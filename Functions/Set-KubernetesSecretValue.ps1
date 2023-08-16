@@ -10,8 +10,8 @@ function Set-KubernetesSecretValue {
         The name of the Kubernetes secret.
     .PARAMETER SecretData
         The data for the Kubernetes secret as a PSCredential where the UserName will be the key and the Password will be the secret value.
-    .PARAMETER IgnoreKeyExistenceCheck
-        Tells the function to ignore the existence check for the key passed to the SecretData parameter.
+    .PARAMETER Add
+        Tells the function to ignore the existence check for the key passed to the SecretData parameter and adds the new key/value pair data to the existing secret object.
     .EXAMPLE
         $secretDataName = "myapikey"
         $secretValue = '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'
@@ -20,6 +20,14 @@ function Set-KubernetesSecretValue {
         Set-KubernetesSecretValue  -SecretName "my-secret" -SecretData $secretDataCred
 
         Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'.
+    .EXAMPLE
+        $secretDataName = "mysecondapikey"
+        $secretValue = 'NRHnXj#DG&sJA*7IYgl$r!aO'
+        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
+        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
+        Set-KubernetesSecretValue  -SecretName "my-secret" -SecretData $secretDataCred -Add
+
+        Adds a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of 'NRHnXj#DG&sJA*7IYgl$r!aO'.
     .EXAMPLE
         $secretDataName = "mypassword"
         $secretValue = 'IUrwnq8ZNbWMF5eKSviL&3xf^z42to0V!haHAE'
@@ -58,7 +66,7 @@ function Set-KubernetesSecretValue {
         [System.Management.Automation.PSCredential]
         [System.Management.Automation.Credential()]$SecretData,
 
-        [Parameter(Mandatory = $false)][Alias('i')][Switch]$IgnoreKeyExistenceCheck
+        [Parameter(Mandatory = $false)][Alias('a')][Switch]$Add
     )
     BEGIN {
         if (-not(Test-KubernetesNamespaceAccess -Namespace $Namespace)) {
@@ -94,9 +102,9 @@ function Set-KubernetesSecretValue {
             Write-Error -Exception $ParseException -ErrorAction Stop
         }
 
-        if (-not($PSBoundParameters.ContainsKey("IgnoreKeyExistenceCheck"))) {
+        if (-not($PSBoundParameters.ContainsKey("Add"))) {
             if (-not($secretKeyName -in $existingSecretDataKeys)) {
-                $argExceptionMessage = "The key '{0}' does not exist in the following secret: {1}:{2}" -f $secretKeyName, $Namespace, $SecretName
+                $argExceptionMessage = "The key '{0}' does not exist in the following secret: {1}:{2}. If you wish to add a new key/value pair to {1}:{2}, use the Add parameter." -f $secretKeyName, $Namespace, $SecretName
                 $ArgumentException = [ArgumentException]::new($argExceptionMessage)
                 Write-Error -Exception $ArgumentException -ErrorAction Stop
             }
@@ -119,7 +127,11 @@ function Set-KubernetesSecretValue {
                 Write-Verbose -Message ("Updated the following generic secret: {0}:{1}" -f $Namespace, $SecretName)
             }
 
-            $secretObjectMetadata = Get-KubernetesSecretData -Namespace $Namespace -SecretName $SecretName
+            if (-not($PSBoundParameters.ContainsKey("Add"))) {
+                Write-Verbose -Message ("Added new data with a key of {0} to the following generic secret: {1}:{2}" -f $secretKeyName, $Namespace, $SecretName)
+            }
+
+            $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName
             Write-Output -InputObject $secretObjectMetadata
         }
         catch {

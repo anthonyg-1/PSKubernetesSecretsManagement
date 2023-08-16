@@ -88,7 +88,7 @@ function New-KubernetesEphemeralSecret {
                 Write-Verbose -Message ("Created the following generic secret: {0}:{1}" -f $Namespace, $SecretName)
             }
 
-            $secretObjectMetadata = Get-KubernetesSecretData -Namespace $Namespace -SecretName $SecretName
+            $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName
             Write-Output -InputObject $secretObjectMetadata
         }
         catch {
