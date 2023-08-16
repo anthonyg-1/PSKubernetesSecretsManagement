@@ -8,6 +8,8 @@ function Get-KubernetesSecretData {
         The Kubernetes namespace that the secret will be created in.
     .PARAMETER SecretName
         The name of the Kubernetes secret.
+    .PARAMETER All
+        Tells the function to obtain all secrets across all authorized namespaces.
     .EXAMPLE
         Get-KubernetesSecretData -Namespace "apps"
 
@@ -21,7 +23,7 @@ function Get-KubernetesSecretData {
 
         Gets Kubernetes secret data for the secret 'my-secret' in the 'apps' namespace.
     .EXAMPLE
-        Get-KubernetesNamespaceMetadata | Get-KubernetesSecretDat
+       Get-KubernetesSecretData -All
 
         Gets Kubernetes secret data all secrets across all authorized namespaces.
     .EXAMPLE
@@ -37,7 +39,7 @@ function Get-KubernetesSecretData {
 
         Gets Kubernetes secret data for the secret 'my-secret' in the 'apps' namespace.
     .EXAMPLE
-        gknm | gksd
+        gksd -a
 
         Gets Kubernetes secret data all secrets across all authorized namespaces.
     .LINK
@@ -49,7 +51,8 @@ function Get-KubernetesSecretData {
     Param
     (
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)][Alias('ns', 'n')][String]$Namespace = 'default',
-        [Parameter(Mandatory = $false)][Alias('s')][String]$SecretName
+        [Parameter(Mandatory = $false)][Alias('s')][String]$SecretName,
+        [Parameter(Mandatory = $false, ParameterSetName = "All")][Alias('a')][Switch]$All
     )
     BEGIN {
         try {
@@ -119,15 +122,24 @@ function Get-KubernetesSecretData {
             }
         }
 
-        ## All secrets across all namespaces:
-        #  $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -ErrorAction Stop).items.metadata
-
-        foreach ($targetSecretName in $targetSecretNames) {
-            try {
-                _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $targetSecretName
+        if ($PSBoundParameters.ContainsKey("All")) {
+            $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -ErrorAction Stop).items.metadata | ForEach-Object {
+                try {
+                    _getK8sSecretMetadata -targetNamespace $_.namespace -targetSecretName $_.name
+                }
+                catch {
+                    Write-Error -Exception $_-ErrorAction Stop
+                }
             }
-            catch {
-                Write-Error -Exception $_-ErrorAction Stop
+        }
+        else {
+            foreach ($targetSecretName in $targetSecretNames) {
+                try {
+                    _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $targetSecretName
+                }
+                catch {
+                    Write-Error -Exception $_-ErrorAction Stop
+                }
             }
         }
     }
