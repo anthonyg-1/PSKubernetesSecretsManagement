@@ -24,7 +24,7 @@
     Author               = 'Tony Guimelli'
 
     # Minimum version of the Windows PowerShell engine required by this module
-    PowerShellVersion    = '7.1'
+    PowerShellVersion    = '7.2'
 
     # Description of the functionality provided by this module
     Description          = 'This PowerShell module contains functions that facilitate the creation, rotation, and viewing the metadata of Kubernetes secrets.'
