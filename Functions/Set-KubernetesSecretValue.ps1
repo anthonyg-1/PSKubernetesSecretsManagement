@@ -12,6 +12,8 @@ function Set-KubernetesSecretValue {
         The data for the Kubernetes secret as a PSCredential where the UserName will be the key and the Password will be the secret value.
     .PARAMETER Add
         Tells the function to ignore the existence check for the key passed to the SecretData parameter and adds the new key/value pair data to the existing secret object.
+    .PARAMETER AsJson
+        Returns the results as a serialized JSON string as opposed to the default object type.
     .EXAMPLE
         $secretDataName = "myapikey"
         $secretValue = '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'
@@ -52,10 +54,18 @@ function Set-KubernetesSecretValue {
         sksv -n apps -s "my-secret" -d $secretDataCred
 
         Sets a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'IUrwnq8ZNbWMF5eKSviL&3xf^z42to0V!haHAE'.
+    .EXAMPLE
+        $secretDataName = "myapikey"
+        $secretValue = '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'
+        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
+        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
+        sksv -s "my-secret" -d $secretDataCred -json
+
+        Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd' with the output rendered as JSON.
 #>
     [CmdletBinding()]
     [Alias('sksv')]
-    [OutputType([PSCustomObject])]
+    [OutputType([System.Management.Automation.PSCustomObject], [System.String])]
     Param
     (
         [Parameter(Mandatory = $false)][Alias('ns', 'n')][String]$Namespace = 'default',
@@ -66,7 +76,9 @@ function Set-KubernetesSecretValue {
         [System.Management.Automation.PSCredential]
         [System.Management.Automation.Credential()]$SecretData,
 
-        [Parameter(Mandatory = $false)][Alias('a')][Switch]$Add
+        [Parameter(Mandatory = $false)][Alias('a')][Switch]$Add,
+
+        [Parameter(Mandatory = $false)][Alias('json', 'j')][Switch]$AsJson
     )
     BEGIN {
         if (-not(Test-KubernetesNamespaceAccess -Namespace $Namespace)) {
@@ -131,7 +143,13 @@ function Set-KubernetesSecretValue {
                 Write-Verbose -Message ("Added new data with a key of {0} to the following generic secret: {1}:{2}" -f $secretKeyName, $Namespace, $SecretName)
             }
 
-            $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName
+            if ($PSBoundParameters.ContainsKey("AsJson")) {
+                $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName -AsJson
+            }
+            else {
+                $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName
+            }
+
             Write-Output -InputObject $secretObjectMetadata
         }
         catch {

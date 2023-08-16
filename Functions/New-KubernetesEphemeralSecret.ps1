@@ -10,6 +10,8 @@ function New-KubernetesEphemeralSecret {
         The name of the Kubernetes secret.
     .PARAMETER SecretData
         The data for the Kubernetes secret as a PSCredential where the UserName will be the key and the Password will be the secret value.
+    .PARAMETER AsJson
+        Returns the results as a serialized JSON string as opposed to the default object type.
     .EXAMPLE
         $secretDataName = "myapikey"
         $secretValue = '9eC29a57e584426E960dv3f84aa154c13fS$%m'
@@ -42,10 +44,18 @@ function New-KubernetesEphemeralSecret {
         nkes -n apps -s "my-secret" -d $secretDataCred
 
         Creates a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'A4458fcaT334f46c4bE4d46R564220b3bTb3'.
+    .EXAMPLE
+        $secretDataName = "mypassword"
+        $secretValue = 'A4458fcaT334f46c4bE4d46R564220b3bTb3'
+        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
+        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
+        nkes -n apps -s "my-secret" -d $secretDataCred -json
+
+        Creates a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'A4458fcaT334f46c4bE4d46R564220b3bTb3' with the output rendered as JSON.
 #>
     [CmdletBinding()]
     [Alias('nkes')]
-    [OutputType([PSCustomObject])]
+    [OutputType([System.Management.Automation.PSCustomObject], [System.String])]
     Param
     (
         [Parameter(Mandatory = $false)][Alias('ns', 'n')][String]$Namespace = 'default',
@@ -54,7 +64,9 @@ function New-KubernetesEphemeralSecret {
 
         [Parameter(Mandatory = $true)][ValidateNotNull()][Alias('d')]
         [System.Management.Automation.PSCredential]
-        [System.Management.Automation.Credential()]$SecretData
+        [System.Management.Automation.Credential()]$SecretData,
+
+        [Parameter(Mandatory = $false)][Alias('json', 'j')][Switch]$AsJson
     )
     BEGIN {
         if (-not(Test-KubernetesNamespaceAccess -Namespace $Namespace)) {
@@ -88,7 +100,15 @@ function New-KubernetesEphemeralSecret {
                 Write-Verbose -Message ("Created the following generic secret: {0}:{1}" -f $Namespace, $SecretName)
             }
 
-            $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName
+            $secretObjectMetadata = $null
+
+            if ($PSBoundParameters.ContainsKey("AsJson")) {
+                $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName -AsJson
+            }
+            else {
+                $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName
+            }
+
             Write-Output -InputObject $secretObjectMetadata
         }
         catch {

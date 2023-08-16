@@ -10,6 +10,8 @@ function Get-KubernetesSecretMetadata {
         The name of the Kubernetes secret.
     .PARAMETER All
         Tells the function to obtain all secrets across all authorized namespaces.
+    .PARAMETER AsJson
+        Returns the results as a serialized JSON string as opposed to the default object type.
     .EXAMPLE
         Get-KubernetesSecretMetadata -Namespace "apps"
 
@@ -27,6 +29,10 @@ function Get-KubernetesSecretMetadata {
 
         Gets Kubernetes secret metadata all secrets across all authorized namespaces.
     .EXAMPLE
+        Get-KubernetesSecretMetadata -All -AsJson
+
+        Gets Kubernetes secret metadata all secrets across all authorized namespaces with the results returned as a JSON string.
+    .EXAMPLE
         gksm -n "apps"
 
         Gets Kubernetes secret metadata for all secrets in the 'apps' namespace.
@@ -42,15 +48,26 @@ function Get-KubernetesSecretMetadata {
         gksm -a
 
         Gets Kubernetes secret metadata all secrets across all authorized namespaces.
+    .EXAMPLE
+        gksm -a -json
+
+        Gets Kubernetes secret metadata all secrets across all authorized namespaces with the results returned as a JSON string.
+    .INPUTS
+        System.String
+
+            A string value is received by the Namespace parameter
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject or System.String
     #>
     [CmdletBinding()]
     [Alias('gksm', 'gksd')]
-    [OutputType([PSCustomObject])]
+    [OutputType([System.Management.Automation.PSCustomObject], [System.String])]
     Param
     (
-        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)][Alias('ns', 'n')][String]$Namespace = 'default',
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][Alias('ns', 'n')][String]$Namespace = 'default',
         [Parameter(Mandatory = $false)][Alias('s')][String]$SecretName,
-        [Parameter(Mandatory = $false, ParameterSetName = "All")][Alias('a')][Switch]$All
+        [Parameter(Mandatory = $false, ParameterSetName = "All")][Alias('a')][Switch]$All,
+        [Parameter(Mandatory = $false)][Alias('json', 'j')][Switch]$AsJson
     )
     BEGIN {
         if (-not(Test-KubernetesNamespaceAccess -Namespace $Namespace)) {
@@ -115,8 +132,18 @@ function Get-KubernetesSecretMetadata {
 
         if ($PSBoundParameters.ContainsKey("All")) {
             try {
+                $allSecretObjects = @()
+
                 $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -ErrorAction Stop).items.metadata | ForEach-Object {
-                    _getK8sSecretMetadata -targetNamespace $_.namespace -targetSecretName $_.name
+                    $k8sd = _getK8sSecretMetadata -targetNamespace $_.namespace -targetSecretName $_.name
+                    $allSecretObjects += $k8sd
+                }
+
+                if ($PSBoundParameters.ContainsKey("AsJson")) {
+                    return ($allSecretObjects | ConvertTo-Json)
+                }
+                else {
+                    return ($allSecretObjects)
                 }
             }
             catch {
@@ -126,7 +153,14 @@ function Get-KubernetesSecretMetadata {
         else {
             foreach ($targetSecretName in $targetSecretNames) {
                 try {
-                    _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $targetSecretName
+                    $k8sd = _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $targetSecretName
+
+                    if ($PSBoundParameters.ContainsKey("AsJson")) {
+                        return ($k8sd | ConvertTo-Json)
+                    }
+                    else {
+                        return ($k8sd)
+                    }
                 }
                 catch {
                     Write-Error -Exception $_-ErrorAction Stop
