@@ -57,14 +57,6 @@ function Set-KubernetesSecretValue {
         [System.Management.Automation.Credential()]$SecretData
     )
     BEGIN {
-        try {
-            Get-Command -Name kubectl -ErrorAction Stop | Out-Null
-        }
-        catch {
-            $FileNotFoundException = [IO.FileNotFoundException]::new("Unable to find kubectl. Execution halted.")
-            Write-Error -Exception $FileNotFoundException -ErrorAction Stop
-        }
-
         if (-not(Test-KubernetesNamespaceAccess -Namespace $Namespace)) {
             $ArgumentException = [Security.SecurityException]::new("The following namespace was either not found or inaccessible: $Namespace")
             Write-Error -Exception $ArgumentException -ErrorAction Stop
