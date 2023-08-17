@@ -116,3 +116,47 @@ $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
 $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
 sksv -s "my-secret" -d $secretDataCred -json
 ```
+
+### Kubernetes secret metadata retrieving examples
+
+```powershell
+# Gets Kubernetes secret metadata for all secrets in the 'apps' namespace
+
+Get-KubernetesSecretMetadata -Namespace "apps"
+
+# Gets Kubernetes secret metadata for the secret 'my-secret' in the default namespace
+
+Get-KubernetesSecretMetadata -SecretName "my-secret"
+
+# Gets Kubernetes secret metadata for the secret 'my-secret' in the 'apps' namespace
+
+Get-KubernetesSecretMetadata -Namespace "apps" -SecretName "my-secret"
+
+# Gets Kubernetes secret metadata all secrets across all authorized namespaces
+
+Get-KubernetesSecretMetadata -All
+
+# Gets Kubernetes secret metadata all secrets across all authorized namespaces with the results returned as a JSON string
+
+Get-KubernetesSecretMetadata -All -AsJson
+
+# Gets Kubernetes secret metadata for all secrets in the 'apps' namespace with the aliased versison of Get-KubernetesSecretMetadata
+
+gksm -n "apps"
+
+# Gets Kubernetes secret metadata for the secret 'my-secret' in the default namespace with the aliased versison of Get-KubernetesSecretMetadata
+
+gksm -s "my-secret"
+
+# Gets Kubernetes secret metadata for the secret 'my-secret' in the 'apps' namespace with the aliased versison of Get-KubernetesSecretMetadata
+
+gksm -n "apps" -s "my-secret"
+
+# Gets Kubernetes secret metadata all secrets across all authorized namespaces with the aliased versison of Get-KubernetesSecretMetadata
+
+gksm -a
+
+# Gets Kubernetes secret metadata all secrets across all authorized namespaces with the results returned as a JSON string with the aliased versison of Get-KubernetesSecretMetadata
+
+gksm -a -json
+```
