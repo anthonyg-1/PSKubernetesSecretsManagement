@@ -27,7 +27,7 @@
     PowerShellVersion    = '7.2'
 
     # Description of the functionality provided by this module
-    Description          = 'This PowerShell module contains functions that facilitate the creation, rotation, and viewing the metadata of Kubernetes secrets.'
+    Description          = 'This PowerShell module contains functions that facilitate the creation, rotation, auditing, and viewing the metadata of Kubernetes secrets.'
 
     # Functions to export from this module
     FunctionsToExport    = 'Get-KubernetesSecretMetadata', 'New-KubernetesEphemeralSecret', 'Set-KubernetesSecretValue'
