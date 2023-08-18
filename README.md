@@ -98,7 +98,7 @@ $secretDataName = "myapikey"
 $secretValue = '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'
 $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
 $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
-sksv -s "my-secret" -d $secretDataCred
+sksd -s "my-secret" -d $secretDataCred
 
 # Sets a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'IUrwnq8ZNbWMF5eKSviL&3xf^z42to0V!haHAE' using the aliased version of Set-KubernetesSecretValue
 
@@ -106,7 +106,7 @@ $secretDataName = "mypassword"
 $secretValue = 'IUrwnq8ZNbWMF5eKSviL&3xf^z42to0V!haHAE'
 $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
 $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
-sksv -n apps -s "my-secret" -d $secretDataCred
+sksd -n apps -s "my-secret" -d $secretDataCred
 
 # Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd' with the output rendered as JSON using the aliased version of Set-KubernetesSecretValue
 
@@ -114,7 +114,7 @@ $secretDataName = "myapikey"
 $secretValue = '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'
 $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
 $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
-sksv -s "my-secret" -d $secretDataCred -json
+sksd -s "my-secret" -d $secretDataCred -json
 ```
 
 ### Kubernetes secret metadata retrieving examples
