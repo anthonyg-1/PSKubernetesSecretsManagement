@@ -17,4 +17,4 @@ jobs:
         Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.21.0 -Force 
     - name: Run Pester Tests
       shell: pwsh
-      run: Invoke-Pester
+      run: Invoke-Pester -PassThru
