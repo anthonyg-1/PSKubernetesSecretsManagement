@@ -111,7 +111,7 @@ function Get-KubernetesSecretMetadata {
         $targetNamespace = $Namespace
 
         if ($PSBoundParameters.ContainsKey("SecretName")) {
-            if (-not(Test-KubernetesSecretAccess -Namespace $targetNamespace -SecretName $SecretName)) {
+            if (-not(Test-KubernetesSecretExistence -Namespace $targetNamespace -SecretName $SecretName)) {
                 $secretArgExceptionMessage = "The following secret was either not found or inaccessible. Check secret name, access rights for the specific secret and/or namespace, and try again: {0}:{1}" -f $targetNamespace, $SecretName
                 $SecretArgumentException = [ArgumentException]::new($secretArgExceptionMessage)
                 Write-Error -Exception $SecretArgumentException -ErrorAction Stop

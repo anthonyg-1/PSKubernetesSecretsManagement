@@ -60,9 +60,9 @@ function New-KubernetesEphemeralSecret {
     (
         [Parameter(Mandatory = $false)][Alias('ns', 'n')][String]$Namespace = 'default',
 
-        [Parameter(Mandatory = $true)][Alias('s')][String]$SecretName,
+        [Parameter(Mandatory = $true)][Alias('s', 'sn')][String]$SecretName,
 
-        [Parameter(Mandatory = $true)][ValidateNotNull()][Alias('d')]
+        [Parameter(Mandatory = $true)][ValidateNotNull()][Alias('d', 'sd')]
         [System.Management.Automation.PSCredential]
         [System.Management.Automation.Credential()]$SecretData,
 
@@ -85,7 +85,7 @@ function New-KubernetesEphemeralSecret {
         }
     }
     PROCESS {
-        if (Test-KubernetesSecretAccess -Namespace $Namespace -SecretName $SecretName) {
+        if (Test-KubernetesSecretExistence -Namespace $Namespace -SecretName $SecretName) {
             $(kubectl delete secret --namespace=$Namespace $SecretName 2>&1) | Out-Null
         }
 
