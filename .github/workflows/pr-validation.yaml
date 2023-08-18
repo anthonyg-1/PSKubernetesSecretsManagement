@@ -1,0 +1,20 @@
+name: Run Pester Test Validation
+on:  
+  push:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  TestModule:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Modules
+      shell: pwsh
+      run: | 
+        Install-Module -Name Pester -RequiredVersion 4.10.1 -Force 
+        Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.21.1 -Force 
+    - name: Run Pester Tests
+      shell: pwsh
+      run: Invoke-Pester
