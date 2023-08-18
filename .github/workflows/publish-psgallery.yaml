@@ -1,0 +1,29 @@
+name: Publish to PSGallery and Create Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install Modules
+      shell: pwsh
+      run: |
+        Install-Module -Name Pester -RequiredVersion 4.10.1 -Force
+        Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.21.0 -Force
+    - name: Run Pester Tests
+      shell: pwsh
+      run: Invoke-Pester -PassThru
+
+    - name: Publish to PSGallery
+      shell: pwsh
+      run: |
+        Install-Module -Name PowerShellGet -Force -AllowClobber -Scope CurrentUser
+        Publish-Module -Path (($PWD).Path) -NuGetApiKey ${{ secrets.PSGALLERYAPIKEY }}
