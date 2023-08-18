@@ -12,7 +12,7 @@
     RootModule           = '.\PSKubernetesSecretsManagement.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '0.5.0'
+    ModuleVersion        = '0.6.0'
 
     # Compatibility
     CompatiblePSEditions = 'Desktop', 'Core'
@@ -30,10 +30,10 @@
     Description          = 'This PowerShell module contains functions that facilitate the creation, rotation, auditing, and viewing the metadata of Kubernetes secrets.'
 
     # Functions to export from this module
-    FunctionsToExport    = 'Get-KubernetesSecretMetadata', 'New-KubernetesEphemeralSecret', 'Set-KubernetesSecretValue'
+    FunctionsToExport    = 'Get-KubernetesSecretMetadata', 'New-KubernetesEphemeralSecret', 'Set-KubernetesSecretData'
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-    AliasesToExport      = 'gksm', 'gksd', 'nkes', 'sksv'
+    AliasesToExport      = 'gksm', 'gksd', 'nkes', 'sksd'
 
     # List of all files packaged with this module
     FileList             = 'PSKubernetesSecretsManagement.psd1', 'PSKubernetesSecretsManagement.psm1'
