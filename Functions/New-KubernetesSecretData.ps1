@@ -40,6 +40,7 @@ function New-KubernetesSecretData {
         New-KubernetesEphemeralSecret
         Set-KubernetesSecretData
         https://kubernetes.io/docs/concepts/configuration/secret/
+        https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.pscredential
     #>
     [CmdletBinding()]
     [Alias('nksd')]
