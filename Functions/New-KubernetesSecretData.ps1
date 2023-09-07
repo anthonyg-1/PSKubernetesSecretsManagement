@@ -2,13 +2,13 @@
 function New-KubernetesSecretData {
     <#
     .SYNOPSIS
-       Generates a PSCredential object for Kubernetes secret data.
+       Generates a PSCredential object that will be used to populate a Kubernetes opaque secret.
     .DESCRIPTION
-       The New-KubernetesSecretData function creates a PSCredential object with the specified SecretDataKey and SecretDataValue. The function also ensures that the secret being passed is not recoverable in PowerShell's command history or any PowerShell log.
+       The New-KubernetesSecretData function creates a PSCredential object that will be used to populate a Kubernetes opaque secret. The function also clears the PowerShell history to minimize the chance of accidental secrets exposure, but standard secrets management best practices still apply.
     .PARAMETER SecretDataKey
-       The key for the Kubernetes secret data.
+       The key for the Kubernetes opaque secret data.
     .PARAMETER SecretDataValue
-       The value corresponding to the SecretDataKey.
+       The value corresponding to the key (passed to the SecretDataKey parameter) for a Kubernetes opaque secret data.
     .EXAMPLE
        New-KubernetesSecretData -SecretDataKey "DatabasePassword" -SecretDataValue "mySecret123!"
 
@@ -94,7 +94,7 @@ function New-KubernetesSecretData {
         Write-Output -InputObject $SecretDataKeyValuePair
     }
     END {
-        # Remove function execution calls from history to ensure secret confidentiality:
+        # Remove function execution calls from history to mitigate potential secret exposure:
         Clear-FunctionHistory
     }
 }
