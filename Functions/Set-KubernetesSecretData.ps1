@@ -24,20 +24,10 @@ function Set-KubernetesSecretData {
         Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'.
     .EXAMPLE
         $secretDataName = "mysecondapikey"
-        $secretValue = 'NRHnXj#DG&sJA*7IYgl$r!aO'
-        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
-        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
+        $secretDataCred = New-KubernetesSecretData -SecretDataKey $secretDataName -SecretDataValue 'NRHnXj#DG&sJA*7IYgl$r!aO'
         Set-KubernetesSecretData  -SecretName "my-secret" -SecretData $secretDataCred -Add
 
-        Adds a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of 'NRHnXj#DG&sJA*7IYgl$r!aO'.
-    .EXAMPLE
-        $secretDataName = "mypassword"
-        $secretValue = 'IUrwnq8ZNbWMF5eKSviL&3xf^z42to0V!haHAE'
-        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
-        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
-        Set-KubernetesSecretData -Namespace "apps" -SecretName "my-password" -SecretData $secretDataCred
-
-        Sets a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'IUrwnq8ZNbWMF5eKSviL&3xf^z42to0V!haHAE'.
+        Adds a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of 'NRHnXj#DG&sJA*7IYgl$r!aO' via the PSCredential object generate from New-KubernetesSecretData.
     .EXAMPLE
         $secretDataName = "myapikey"
         $secretValue = '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'
@@ -47,14 +37,6 @@ function Set-KubernetesSecretData {
 
         Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'.
     .EXAMPLE
-        $secretDataName = "mypassword"
-        $secretValue = 'IUrwnq8ZNbWMF5eKSviL&3xf^z42to0V!haHAE'
-        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
-        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
-        sksd -n apps -s "my-secret" -d $secretDataCred
-
-        Sets a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'IUrwnq8ZNbWMF5eKSviL&3xf^z42to0V!haHAE'.
-    .EXAMPLE
         $secretDataName = "myapikey"
         $secretValue = '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'
         $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
@@ -62,6 +44,16 @@ function Set-KubernetesSecretData {
         sksd -s "my-secret" -d $secretDataCred -json
 
         Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd' with the output rendered as JSON.
+    .EXAMPLE
+        $secretDataName = "myapikey"
+        sksd -s "my-secret" -d (nksd -k $secretDataName -v '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd') -json
+
+        Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd' with the output rendered as JSON.
+    .LINK
+        New-KubernetesSecretData
+        ConvertTo-SecureString
+        https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.pscredential
+        https://kubernetes.io/docs/concepts/configuration/secret/
 #>
     [CmdletBinding()]
     [Alias('sksd')]

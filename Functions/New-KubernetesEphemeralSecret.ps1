@@ -14,20 +14,18 @@ function New-KubernetesEphemeralSecret {
         Returns the results as a serialized JSON string as opposed to the default object type.
     .EXAMPLE
         $secretDataName = "myapikey"
+        $secretDataCred = New-KubernetesSecretData -SecretDataKey $secretDataName -SecretDataValue '9eC29a57e584426E960dv3f84aa154c13fS$%m'
+        New-KubernetesEphemeralSecret -SecretName "my-secret" -SecretData $secretDataCred
+
+        Creates a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '9eC29a57e584426E960dv3f84aa154c13fS$%m' via the PSCredential object generate from New-KubernetesSecretData.
+    .EXAMPLE
+        $secretDataName = "myapikey"
         $secretValue = '9eC29a57e584426E960dv3f84aa154c13fS$%m'
         $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
         $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
         New-KubernetesEphemeralSecret -SecretName "my-secret" -SecretData $secretDataCred
 
         Creates a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '9eC29a57e584426E960dv3f84aa154c13fS$%m'.
-    .EXAMPLE
-        $secretDataName = "mypassword"
-        $secretValue = 'A4458fcaT334f46c4bE4d46R564220b3bTb3'
-        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
-        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
-        New-KubernetesEphemeralSecret -Namespace "apps" -SecretName "my-password" -SecretData $secretDataCred
-
-        Creates a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'A4458fcaT334f46c4bE4d46R564220b3bTb3'.
     .EXAMPLE
         $secretDataName = "myapikey"
         $secretValue = '9eC29a57e584426E960dv3f84aa154c13fS$%m'
@@ -37,21 +35,14 @@ function New-KubernetesEphemeralSecret {
 
         Creates a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '9eC29a57e584426E960dv3f84aa154c13fS$%m'.
     .EXAMPLE
-        $secretDataName = "mypassword"
-        $secretValue = 'A4458fcaT334f46c4bE4d46R564220b3bTb3'
-        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
-        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
-        nkes -n apps -s "my-secret" -d $secretDataCred
+        nkes -s "my-secret" -d (nksd -k "myapikey" -v '9eC29a57e584426E960dv3f84aa154c13fS$%m')
 
-        Creates a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'A4458fcaT334f46c4bE4d46R564220b3bTb3'.
-    .EXAMPLE
-        $secretDataName = "mypassword"
-        $secretValue = 'A4458fcaT334f46c4bE4d46R564220b3bTb3'
-        $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
-        $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
-        nkes -n apps -s "my-secret" -d $secretDataCred -json
-
-        Creates a Kubernetes secret in the apps namespace with a name of 'my-password' with a key of 'mypassword' and a value of 'A4458fcaT334f46c4bE4d46R564220b3bTb3' with the output rendered as JSON.
+        Creates a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '9eC29a57e584426E960dv3f84aa154c13fS$%m' via the PSCredential object generate from New-KubernetesSecretData.
+    .LINK
+        New-KubernetesSecretData
+        ConvertTo-SecureString
+        https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.pscredential
+        https://kubernetes.io/docs/concepts/configuration/secret/
 #>
     [CmdletBinding()]
     [Alias('nkes')]
