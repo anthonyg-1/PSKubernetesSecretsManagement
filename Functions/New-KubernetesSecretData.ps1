@@ -72,10 +72,10 @@ function New-KubernetesSecretData {
 
             try {
                 Get-History |
-                Where-Object { ($_.CommandLine -match $functionName) -or ($_.CommandLine -match $functionAliases) } |
-                ForEach-Object {
-                    Clear-History -Id $_.Id
-                }
+                    Where-Object { ($_.CommandLine -match $functionName) -or ($_.CommandLine -match $functionAliases) } |
+                        ForEach-Object {
+                            Clear-History -Id $_.Id
+                        }
 
                 $cmdNames = @($functionName, $functionAliases) -join ", "
                 $verboseMessage = "Events cleared with calls to the following: $cmdNames"
