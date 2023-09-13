@@ -3,7 +3,7 @@ function Get-KubernetesSecretMetadata {
     .SYNOPSIS
         Gets a Kubernetes secret metadata.
     .DESCRIPTION
-        Obtains a subset of Kubernetes secret metadata including creation and update date/times.
+        Obtains a subset of Kubernetes secret metadata including annoations and create/update date times.
     .PARAMETER Namespace
         The Kubernetes namespace that the secret will be created in.
     .PARAMETER SecretName
@@ -86,13 +86,14 @@ function Get-KubernetesSecretMetadata {
                 }
 
                 $deserializedGetOutput = [PSCustomObject]@{
-                    Name      = $secretGetResult.metadata.name
-                    Namespace = $secretGetResult.metadata.namespace
-                    Type      = $secretGetResult.type
-                    DataCount = $dataKeys.Count
-                    DataKeys  = $dataKeys
-                    CreatedOn = $managedFieldValues | Where-Object -Property manager -eq "kubectl-create" | Select-Object -ExpandProperty time
-                    UpdatedOn = $managedFieldValues | Where-Object -Property manager -eq "kubectl-patch" | Select-Object -ExpandProperty time
+                    Name        = $secretGetResult.metadata.name
+                    Namespace   = $secretGetResult.metadata.namespace
+                    Type        = $secretGetResult.type
+                    DataCount   = $dataKeys.Count
+                    DataKeys    = $dataKeys
+                    CreatedOn   = $managedFieldValues | Where-Object -Property manager -eq "kubectl-create" | Select-Object -ExpandProperty time
+                    UpdatedOn   = $managedFieldValues | Where-Object -Property manager -eq "kubectl-patch" | Select-Object -ExpandProperty time
+                    Annotations = $null -ne $secretGetResult.metadata.annotations ? $secretGetResult.metadata.annotations : ""
                 }
 
                 return $deserializedGetOutput
@@ -103,7 +104,6 @@ function Get-KubernetesSecretMetadata {
                 Write-Error -Exception $ArgumentException -ErrorAction Stop
             }
         }
-
     }
     PROCESS {
         $targetSecretNames = @()
@@ -140,10 +140,10 @@ function Get-KubernetesSecretMetadata {
                 }
 
                 if ($PSBoundParameters.ContainsKey("AsJson")) {
-                    return ($allSecretObjects | ConvertTo-Json)
+                    ($allSecretObjects | ConvertTo-Json -AsArray)
                 }
                 else {
-                    return ($allSecretObjects)
+                    ($allSecretObjects)
                 }
             }
             catch {
@@ -156,10 +156,10 @@ function Get-KubernetesSecretMetadata {
                     $k8sd = _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $targetSecretName
 
                     if ($PSBoundParameters.ContainsKey("AsJson")) {
-                        return ($k8sd | ConvertTo-Json)
+                        ($k8sd | ConvertTo-Json -AsArray)
                     }
                     else {
-                        return ($k8sd)
+                        ($k8sd)
                     }
                 }
                 catch {
