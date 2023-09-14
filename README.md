@@ -66,6 +66,17 @@ $secretDataValue = $secretValue | ConvertTo-SecureString -AsPlainText -Force
 $secretDataCred = New-Object -TypeName PSCredential -ArgumentList $secretDataName, $secretDataValue
 Set-KubernetesSecretValue  -SecretName "my-secret" -SecretData $secretDataCred
 
+<#
+Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '$U#C9nGDiXJ6To3SY78NZjlr' with the following annotations:
+    config-management.tool/version: 1.2.3
+    config-management.tool/managed: true
+#>
+
+$secret = "my-secret"
+$annotations = @{"config-management.tool/version" = "1.2.3"; "config-management.tool/managed" = $true }
+$sd = New-KubernetesSecretData -SecretDataKey "myapikey" -SecretDataValue '$U#C9nGDiXJ6To3SY78NZjlr'
+Set-KubernetesSecretData -SecretName $secret -SecretData $sd -Annotation $annotations
+
 # Adds a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of 'NRHnXj#DG&sJA*7IYgl$r!aO' via the PSCredential object generate from New-KubernetesSecretData
 
 $secretDataName = "mysecondapikey"
