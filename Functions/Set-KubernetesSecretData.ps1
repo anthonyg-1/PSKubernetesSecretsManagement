@@ -23,6 +23,15 @@ function Set-KubernetesSecretData {
 
         Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '2@GaImh59O3C8!TMwLSf$gVrjsuiDZAEveKxkd'.
     .EXAMPLE
+        $secret = "my-secret"
+        $annotations = @{"config-management.tool/version" = "1.2.3"; "config-management.tool/managed" = $true }
+        $sd = New-KubernetesSecretData -SecretDataKey "myapikey" -SecretDataValue '$U#C9nGDiXJ6To3SY78NZjlr'
+        Set-KubernetesSecretData -SecretName $secret -SecretData $sd -Annotation $annotations
+
+        Sets a Kubernetes secret in the default namespace with a name of 'my-secret' with a key of 'myapikey' and a value of '$U#C9nGDiXJ6To3SY78NZjlr' with the following annotations:
+            config-management.tool/version: 1.2.3
+            config-management.tool/managed: true
+    .EXAMPLE
         $secretDataName = "mysecondapikey"
         $secretDataCred = New-KubernetesSecretData -SecretDataKey $secretDataName -SecretDataValue 'NRHnXj#DG&sJA*7IYgl$r!aO'
         Set-KubernetesSecretData  -SecretName "my-secret" -SecretData $secretDataCred -Add
@@ -69,6 +78,8 @@ function Set-KubernetesSecretData {
         [System.Management.Automation.Credential()]$SecretData,
 
         [Parameter(Mandatory = $false)][Alias('a')][Switch]$Add,
+
+        [Parameter(Mandatory = $false)][ValidateNotNull()][Alias('an', 'Annotations')][System.Collections.Hashtable]$Annotation,
 
         [Parameter(Mandatory = $false)][Alias('json', 'j')][Switch]$AsJson
     )
@@ -134,19 +145,29 @@ function Set-KubernetesSecretData {
             if (-not($PSBoundParameters.ContainsKey("Add"))) {
                 Write-Verbose -Message ("Added new data with a key of {0} to the following generic secret: {1}:{2}" -f $secretKeyName, $Namespace, $SecretName)
             }
-
-            if ($PSBoundParameters.ContainsKey("AsJson")) {
-                $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName -AsJson
-            }
-            else {
-                $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName
-            }
-
-            Write-Output -InputObject $secretObjectMetadata
         }
         catch {
             $ArgumentException = [ArgumentException]::new("Unable to update the following secret in the $Namespace namespace: $SecretName")
             Write-Error -Exception $ArgumentException -ErrorAction Stop
         }
+
+        if ($PSBoundParameters.ContainsKey("Annotation")) {
+            try {
+                Set-KubernetesSecretAnnotation -Namespace $Namespace -SecretName $SecretName -Annotation $Annotation -ErrorAction Stop
+            }
+            catch {
+                Write-Error -Exception $_.Exception -ErrorAction Stop
+            }
+        }
+
+        [System.Management.Automation.PSObject]$secretObjectMetadata = $null
+        if ($PSBoundParameters.ContainsKey("AsJson")) {
+            $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName -AsJson
+        }
+        else {
+            $secretObjectMetadata = Get-KubernetesSecretMetadata -Namespace $Namespace -SecretName $SecretName
+        }
+
+        Write-Output -InputObject $secretObjectMetadata
     }
 }
