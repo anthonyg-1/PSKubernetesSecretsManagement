@@ -12,6 +12,8 @@ function Set-KubernetesSecretData {
         The data for the Kubernetes secret as a PSCredential where the UserName will be the key and the Password will be the secret value.
     .PARAMETER Add
         Tells the function to ignore the existence check for the key passed to the SecretData parameter and adds the new key/value pair data to the existing secret object.
+    .PARAMETER Annotation
+        Annotations to be applied to the secret object.
     .PARAMETER AsJson
         Returns the results as a serialized JSON string as opposed to the default object type.
     .EXAMPLE
@@ -71,7 +73,7 @@ function Set-KubernetesSecretData {
     (
         [Parameter(Mandatory = $false)][Alias('ns', 'n')][String]$Namespace = 'default',
 
-        [Parameter(Mandatory = $true)][Alias('s', 'sn')][String]$SecretName,
+        [Parameter(Mandatory = $true)][Alias('s', 'sn', 'Name')][String]$SecretName,
 
         [Parameter(Mandatory = $true)][ValidateNotNull()][Alias('d', 'sd')]
         [System.Management.Automation.PSCredential]
