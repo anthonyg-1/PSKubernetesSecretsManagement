@@ -59,21 +59,17 @@ function Get-KubernetesSecretMetadata {
     .OUTPUTS
         System.Management.Automation.PSCustomObject or System.String
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = "Default")]
     [Alias('gksm', 'gksd')]
     [OutputType([System.Management.Automation.PSCustomObject], [System.String])]
     Param
     (
-        [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][Alias('ns', 'n')][String]$Namespace = 'default',
-        [Parameter(Mandatory = $false)][Alias('s')][String]$SecretName,
-        [Parameter(Mandatory = $false, ParameterSetName = "All")][Alias('a')][Switch]$All,
+        [Parameter(Mandatory = $true, ParameterSetName = "Default", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateLength(1, 63)][Alias('ns', 'n')][String]$Namespace,
+        [Parameter(Mandatory = $false, ParameterSetName = "Default")][ValidateLength(1, 63)][Alias('s')][String]$SecretName,
+        [Parameter(Mandatory = $true, ParameterSetName = "All")][Alias('a')][Switch]$All,
         [Parameter(Mandatory = $false)][Alias('json', 'j')][Switch]$AsJson
     )
     BEGIN {
-        if (-not(Test-KubernetesNamespaceAccess -Namespace $Namespace)) {
-            $ArgumentException = [Security.SecurityException]::new("The following namespace was either not found or inaccessible: $Namespace")
-            Write-Error -Exception $ArgumentException -ErrorAction Stop
-        }
 
         function _getK8sSecretMetadata([string]$targetNamespace, [string]$targetSecretName) {
             try {
@@ -110,16 +106,18 @@ function Get-KubernetesSecretMetadata {
 
         $targetNamespace = $Namespace
 
-        if ($PSBoundParameters.ContainsKey("SecretName")) {
-            if (-not(Test-KubernetesSecretExistence -Namespace $targetNamespace -SecretName $SecretName)) {
+        if ($PSBoundParameters.ContainsKey("SecretName") -or $PSBoundParameters.ContainsKey("Namespace")) {
+            if (-not(Test-KubernetesNamespaceAccess -Namespace $targetNamespace)) {
                 $secretArgExceptionMessage = "The following secret was either not found or inaccessible. Check secret name, access rights for the specific secret and/or namespace, and try again: {0}:{1}" -f $targetNamespace, $SecretName
                 $SecretArgumentException = [ArgumentException]::new($secretArgExceptionMessage)
                 Write-Error -Exception $SecretArgumentException -ErrorAction Stop
             }
+        }
 
+        if ($PSBoundParameters.ContainsKey("SecretName")) {
             $targetSecretNames += $SecretName
         }
-        else {
+        elseIf ($PSBoundParameters.ContainsKey("Namespace")) {
             try {
                 [PSCustomObject]$secretGetAllResults = $(kubectl get secrets --namespace=$targetNamespace --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
                 $targetSecretNames += ($secretGetAllResults.items.metadata | Select-Object -ExpandProperty name)
@@ -131,12 +129,30 @@ function Get-KubernetesSecretMetadata {
         }
 
         if ($PSBoundParameters.ContainsKey("All")) {
-            try {
-                $allSecretObjects = @()
+            $allSecretObjects = @()
 
+            # Determining if full enumeration of all secret in a namespace is allowed. If not, then enumeration without the -A switch is required:
+            [bool]$allQueryFailed = $false
+            try {
+                $targetNamespace = ""
                 $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -ErrorAction Stop).items.metadata | ForEach-Object {
-                    $k8sd = _getK8sSecretMetadata -targetNamespace $_.namespace -targetSecretName $_.name
+                    $targetNamespace = $_.namespace
+                    $k8sd = _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $_.name
                     $allSecretObjects += $k8sd
+                }
+            }
+            catch {
+                $allQueryFailed = $true
+            }
+
+            try {
+                $targetNamespace = ""
+                if ($allQueryFailed) {
+                    $(kubectl get secrets --output=json 2>&1 | ConvertFrom-Json).items.metadata | ForEach-Object {
+                        $targetNamespace = $_.namespace
+                        $k8sd = _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $_.name
+                        $allSecretObjects += $k8sd
+                    }
                 }
 
                 if ($PSBoundParameters.ContainsKey("AsJson")) {
@@ -147,7 +163,8 @@ function Get-KubernetesSecretMetadata {
                 }
             }
             catch {
-                Write-Error -Exception $_-ErrorAction Stop
+                $ArgumentException = [ArgumentException]::new("Unable to get secrets in the $targetNamespace namespace.")
+                Write-Error -Exception $ArgumentException -ErrorAction Stop
             }
         }
         else {
@@ -163,7 +180,9 @@ function Get-KubernetesSecretMetadata {
                     }
                 }
                 catch {
-                    Write-Error -Exception $_-ErrorAction Stop
+                    $argumentExceptionMessage = "Unable to find the following secret: {0}:{1}" -f $targetNamespace, $targetSecretName
+                    $ArgumentException = [ArgumentException]::new($argumentExceptionMessage)
+                    Write-Error -Exception $ArgumentException -ErrorAction Stop
                 }
             }
         }
