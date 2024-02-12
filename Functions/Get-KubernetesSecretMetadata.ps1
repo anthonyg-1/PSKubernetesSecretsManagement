@@ -91,8 +91,8 @@ function Get-KubernetesSecretMetadata {
                     Type        = $secretGetResult.type
                     DataCount   = $dataKeys.Count
                     DataKeys    = $dataKeys
-                    CreatedOn   = $managedFieldValues | Where-Object -Property manager -eq "kubectl-create" | Select-Object -ExpandProperty time
-                    UpdatedOn   = $managedFieldValues | Where-Object -Property manager -eq "kubectl-patch" | Select-Object -ExpandProperty time
+                    CreatedOn   = $secretGetResult.metadata.creationTimestamp
+                    UpdatedOn   = $managedFieldValues | Where-Object -Property Operation -eq Update | Sort-Object -Property time -Descending | Select-Object -ExpandProperty time -First 1
                     Annotations = $null -ne $secretGetResult.metadata.annotations ? $secretGetResult.metadata.annotations : ""
                 }
 
