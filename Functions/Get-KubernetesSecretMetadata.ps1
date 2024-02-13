@@ -73,8 +73,8 @@ function Get-KubernetesSecretMetadata {
 
         function _getK8sSecretMetadata([string]$targetNamespace, [string]$targetSecretName) {
             try {
-                [PSCustomObject]$secretGetResult = $(kubectl get secrets --namespace=$targetNamespace $targetSecretName --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
-                [PSCustomObject]$managedFieldValues = ($(kubectl get secrets --namespace=$targetNamespace $targetSecretName --show-managed-fields --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop).metadata.managedFields
+                [PSCustomObject]$secretGetResult = $(kubectl get secrets --namespace=$targetNamespace $targetSecretName --output=json 2>&1) | ConvertFrom-Json -Depth 25 -ErrorAction Stop
+                [PSCustomObject]$managedFieldValues = ($(kubectl get secrets --namespace=$targetNamespace $targetSecretName --show-managed-fields --output=json 2>&1) | ConvertFrom-Json -Depth 25 -ErrorAction Stop).metadata.managedFields
 
                 $dataKeys = $null
                 if ($null -ne $secretGetResult.data) {
@@ -119,7 +119,7 @@ function Get-KubernetesSecretMetadata {
         }
         elseIf ($PSBoundParameters.ContainsKey("Namespace")) {
             try {
-                [PSCustomObject]$secretGetAllResults = $(kubectl get secrets --namespace=$targetNamespace --output=json 2>&1) | ConvertFrom-Json -ErrorAction Stop
+                [PSCustomObject]$secretGetAllResults = $(kubectl get secrets --namespace=$targetNamespace --output=json 2>&1) | ConvertFrom-Json -Depth 25 -ErrorAction Stop
                 $targetSecretNames += ($secretGetAllResults.items.metadata | Select-Object -ExpandProperty name)
             }
             catch {
@@ -135,7 +135,7 @@ function Get-KubernetesSecretMetadata {
             [bool]$allQueryFailed = $false
             try {
                 $targetNamespace = ""
-                $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -ErrorAction Stop).items.metadata | ForEach-Object {
+                $(kubectl get secrets -A --output=json 2>&1 | ConvertFrom-Json -Depth 25 -ErrorAction Stop).items.metadata | ForEach-Object {
                     $targetNamespace = $_.namespace
                     $k8sd = _getK8sSecretMetadata -targetNamespace $targetNamespace -targetSecretName $_.name
                     $allSecretObjects += $k8sd
