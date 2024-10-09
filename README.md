@@ -116,6 +116,10 @@ sksd -s "my-secret" -d (nksd -k $secretDataName -v '2@GaImh59O3C8!TMwLSf$gVrjsui
 ### Kubernetes secret metadata retrieving examples
 
 ```powershell
+# Gets creation and update information for Kubernetes secrets across all namespaces
+
+Get-KubernetesSecretMetadata -All | Select Name, Namespace, CreatedOn, UpdatedOn, DataKeys | Format-Table
+
 # Gets Kubernetes secret metadata for all secrets in the 'apps' namespace
 
 Get-KubernetesSecretMetadata -Namespace "apps"
